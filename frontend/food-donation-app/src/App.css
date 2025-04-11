@@ -1,0 +1,17 @@
+/* App.css – global reset and defaults */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #f9fafb; /* light background */
+  color: #111827; /* dark text */
+}
