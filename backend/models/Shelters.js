@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const ShelterSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  type: { type: String, enum: ['soup kitchen', 'food-pantry'], required: true },
+  type: { type: String, enum: ['shelter'], required: true },
   phone: String,
   address: String,
   borough: String,

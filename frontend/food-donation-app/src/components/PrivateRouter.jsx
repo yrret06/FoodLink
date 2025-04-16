@@ -1,14 +1,8 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 
 function PrivateRoute({ children }) {
-  const { currentUser } = useAuth();
-
-  if (!currentUser) {
-    return <Navigate to="/login" />;
-  }
-
-  return children;
+  const user = localStorage.getItem('user');
+  return user ? children : <Navigate to="/login" />;
 }
 
 export default PrivateRoute;

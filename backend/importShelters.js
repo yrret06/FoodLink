@@ -9,11 +9,6 @@ connectDB();
 const filePath = path.join(__dirname, "data", "shelters.csv");
 const shelters = [];
 
-function normalizeType(typeCode) {
-  if (typeCode === "SK") return "shelter";
-  if (typeCode === "FP") return "food-pantry";
-  return "unknown";
-}
 
 async function insertInBatches(data, batchSize = 1000) {
   for (let i = 0; i < data.length; i += batchSize) {
@@ -32,7 +27,7 @@ fs.createReadStream(filePath)
   .on("data", (row) => {
     const shelter = {
       name: row.PROGRAM?.trim(),
-      type: normalizeType(row.TYPE?.trim()),
+      type: 'shelter',
       phone: row["ORG PHONE"]?.trim(),
       address: row.DISTADD?.trim(),
       borough: row.STBO?.trim(),

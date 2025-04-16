@@ -1,48 +1,30 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { useEffect, useState } from 'react';
 import RestaurantDashboard from '../components/RestaurantDashboard';
 import ShelterDashboard from '../components/ShelterDashboard';
-import './Dashboard.css'; // ✅ Import your CSS
+import './Dashboard.css';
 
 function Dashboard() {
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
-
-  const [role, setRole] = useState(null);
-  const [orgName, setOrgName] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      if (currentUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            setRole(data.role);
-            setOrgName(data.orgId);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-        setLoading(false);
-      }
-    };
+    // Load user from localStorage
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      navigate('/login');
+    } else {
+      setUser(JSON.parse(storedUser));
+    }
+  }, [navigate]);
 
-    fetchUserInfo();
-  }, [currentUser]);
-
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     navigate('/login');
   };
 
-  if (!currentUser || loading) {
+  if (!user) {
     return (
       <div className="dashboard-loading">
         <p className="dashboard-loading-text">Loading your dashboard...</p>
@@ -54,15 +36,15 @@ function Dashboard() {
     <div className="dashboard-wrapper">
       <div className="dashboard-header">
         <h1 className="dashboard-welcome">
-          Welcome, {currentUser.email}
-          {orgName ? ` from ${orgName}` : ''} ({role})
+          Welcome, {user.orgName  ? user.orgName : user.email}
+          {user.orgName ? ` from ${user.orgName}` : ''} ({user.role})
         </h1>
         <button onClick={handleLogout} className="dashboard-logout-btn">
           Logout
         </button>
       </div>
 
-      {role === 'restaurant' ? <RestaurantDashboard /> : <ShelterDashboard />}
+      {user.role === 'restaurant' ? <RestaurantDashboard /> : <ShelterDashboard />}
     </div>
   );
 }

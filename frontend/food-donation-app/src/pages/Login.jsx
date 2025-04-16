@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; // 👈 CSS import
+import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
@@ -10,23 +8,40 @@ function Login() {
     email: '',
     password: '',
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      console.log('Logged in user:', userCredential.user);
+      const res = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Save token to localStorage or a context
+      localStorage.setItem('token', data.token);
+
+      // Optionally save user info to context or state
+      localStorage.setItem('user', JSON.stringify(data.user));
+
       navigate('/dashboard');
-    } catch (error) {
-      alert(error.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -52,6 +67,8 @@ function Login() {
           onChange={handleChange}
           required
         />
+
+        {error && <p className="login-error">{error}</p>}
 
         <button type="submit" className="login-button">
           Login
