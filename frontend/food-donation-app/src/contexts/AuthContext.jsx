@@ -1,23 +1,22 @@
 import { createContext, useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); // MongoDB user object
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    // Load user from localStorage on first mount
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser }}>
+    <AuthContext.Provider value={{ currentUser, setCurrentUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );

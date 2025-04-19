@@ -3,18 +3,43 @@ import './RequestList.css';
 
 function RequestList() {
   const [requests, setRequests] = useState([]);
+  const [fulfillInput, setFulfillInput] = useState({}); // { requestId: pounds }
 
   useEffect(() => {
-    const mockData = [
-      { id: 1, item: 'Rice', pounds: 20, requestedByEmail: 'shelter@example.com' },
-      { id: 2, item: 'Tomatoes', pounds: 10, requestedByEmail: 'shelter2@example.com' },
-    ];
-    setRequests(mockData);
+    fetch('http://localhost:5001/api/food-requests')
+      .then((res) => res.json())
+      .then((data) => setRequests(data))
+      .catch((err) => console.error('Failed to fetch food requests:', err));
   }, []);
 
-  const handleFulfill = (request) => {
-    console.log('Fulfilling request:', request);
-    // Later: POST to backend
+  const handleFulfill = async (request) => {
+    const poundsToFulfill = fulfillInput[request._id];
+    if (!poundsToFulfill || poundsToFulfill <= 0) {
+      alert('Enter a valid pound amount');
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5001/api/food-requests/${request._id}/fulfill`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ poundsFulfilled: parseFloat(poundsToFulfill) }),
+      });
+
+      if (!res.ok) throw new Error('Failed to fulfill request');
+
+      const updated = await res.json();
+
+      setRequests((prev) =>
+        prev.map((r) => (r._id === updated._id ? updated : r))
+      );
+      setFulfillInput((prev) => ({ ...prev, [request._id]: '' }));
+    } catch (err) {
+      console.error(err);
+      alert('Error fulfilling request');
+    }
   };
 
   return (
@@ -24,18 +49,45 @@ function RequestList() {
         <p className="request-list-empty">No current requests.</p>
       ) : (
         <ul className="request-list-items">
-          {requests.map((req) => (
-            <li key={req.id} className="request-list-item">
+          {requests.map((req, index) => (
+            <li key={index} className="request-list-item">
               <div>
-                <p className="request-list-item-name">{req.item} ({req.pounds} lbs)</p>
-                <p className="request-list-email">Requested by: {req.requestedByEmail}</p>
+                <p className="request-list-item-name">
+                  {req.food.item} ({req.food.pounds} lbs)
+                </p>
+                <p className="request-list-email">
+                  Requested by: {req.shelterId?.name || 'Unknown Shelter'}
+                </p>
+                <p className="request-status">
+                  Fulfilled: {req.poundsFulfilled || 0} lbs
+                  {req.fulfilled && ' ✅ (Complete)'}
+                </p>
               </div>
-              <button
-                onClick={() => handleFulfill(req)}
-                className="request-list-btn"
-              >
-                Fulfill
-              </button>
+
+              {!req.fulfilled && (
+                <div className="fulfill-form">
+                  <input
+                    type="number"
+                    min="1"
+                    max={req.food.pounds - (req.poundsFulfilled || 0)}
+                    value={fulfillInput[req._id] || ''}
+                    onChange={(e) =>
+                      setFulfillInput((prev) => ({
+                        ...prev,
+                        [req._id]: e.target.value,
+                      }))
+                    }
+                    placeholder="lbs to fulfill"
+                    className="request-input"
+                  />
+                  <button
+                    onClick={() => handleFulfill(req)}
+                    className="request-list-btn"
+                  >
+                    Fulfill
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

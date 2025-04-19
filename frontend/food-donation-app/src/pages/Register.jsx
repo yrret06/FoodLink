@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import './Register.css'; // ✅ Import the CSS file
+import './Register.css';
 
 function Register() {
   const navigate = useNavigate();
@@ -16,60 +12,66 @@ function Register() {
     orgName: '',
     role: '',
   });
+  const [error, setError] = useState('');
 
+  // Fetch organization list based on role
   useEffect(() => {
-    fetch('https://run.mocky.io/v3/f61c280e-bea1-4d49-8455-d615ddd193bd')
+    if (!formData.role) return;
+
+    const endpoint =
+      formData.role === 'Restaurant'
+        ? 'http://localhost:5001/api/restaurants'
+        : 'http://localhost:5001/api/shelters';
+
+    fetch(endpoint)
       .then((res) => res.json())
       .then((data) => setOrganizations(data))
-      .catch((err) => console.error('Failed to load orgs', err));
-  }, []);
+      .catch((err) => console.error('Failed to load orgs:', err));
+  }, [formData.role]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    if (name === 'orgId') {
-      const selectedOrg = organizations.find((org) => org.id === value);
-      if (selectedOrg) {
-        setFormData((prev) => ({
-          ...prev,
-          orgId: selectedOrg.id,
-          orgName: selectedOrg.name,
-          role: selectedOrg.type,
-        }));
-      }
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'role') {
+      setOrganizations([]);
+      setFormData((prev) => ({ ...prev, orgId: '', orgName: '' }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
     if (!formData.orgId) {
-      alert('Please select a valid organization.');
+      alert('Please select a valid organization from the dropdown.');
       return;
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      const user = userCredential.user;
-
-      await setDoc(doc(db, 'users', user.uid), {
-        email: formData.email,
-        role: formData.role,
-        orgId: formData.orgId,
-        orgName: formData.orgName,
+      const res = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          orgId: formData.orgId,
+          role: formData.role.toLowerCase(),
+        }),
       });
 
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
       alert('Registration successful!');
-      navigate('/login');
-    } catch (error) {
-      console.error('Registration error:', error.message);
-      alert(error.message);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Registration error:', err.message);
+      setError(err.message);
     }
   };
 
@@ -83,6 +85,7 @@ function Register() {
           type="email"
           placeholder="Email"
           className="register-input"
+          value={formData.email}
           onChange={handleChange}
           required
         />
@@ -92,24 +95,81 @@ function Register() {
           type="password"
           placeholder="Password"
           className="register-input"
+          value={formData.password}
           onChange={handleChange}
           required
         />
 
-        <select
-          name="orgId"
-          value={formData.orgId}
-          onChange={handleChange}
-          className="register-select"
-          required
-        >
-          <option value="">Select your organization</option>
-          {organizations.map((org) => (
-            <option key={org.id} value={org.id}>
-              {org.name} ({org.type})
-            </option>
-          ))}
-        </select>
+        <div className="role-select-group">
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="Restaurant"
+              checked={formData.role === 'Restaurant'}
+              onChange={handleChange}
+            />
+            Restaurant
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="Shelter"
+              checked={formData.role === 'Shelter'}
+              onChange={handleChange}
+            />
+            Shelter
+          </label>
+        </div>
+
+        {formData.role && (
+          <div className="autocomplete-container">
+            <input
+              type="text"
+              placeholder={`Search your ${formData.role.toLowerCase()}`}
+              value={formData.orgName}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  orgName: value,
+                  orgId: '',
+                }));
+              }}
+              className="register-input"
+              required
+            />
+
+            {formData.orgName && organizations.length > 0 && (
+              <ul className="autocomplete-list">
+                {organizations
+                  .filter((org) =>
+                    org.name.toLowerCase().includes(formData.orgName.toLowerCase())
+                  )
+                  .slice(0, 10)
+                  .map((org) => (
+                    <li
+                      key={org._id}
+                      className="autocomplete-item"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          orgId: org._id,
+                          orgName: org.name,
+                        }));
+                        setOrganizations([]); // Hide dropdown
+                      }}
+                    >
+                      {org.name}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {error && <p className="register-error">{error}</p>}
 
         <button type="submit" className="register-button">
           Register

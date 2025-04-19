@@ -1,53 +1,112 @@
 /* AvailableFoodList.css */
 
 .foodlist-wrapper {
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  max-width: 600px;
+  background: linear-gradient(to bottom, #f0f4ff, #eafaf1);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  max-width: 700px;
   width: 100%;
-  margin: 1rem auto;
+  margin: 2rem auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .foodlist-title {
-  font-size: 1.25rem;
-  font-weight: bold;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1e3a8a; /* indigo-900 */
+  text-align: center;
+}
+
+.foodlist-restaurant-group {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.foodlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1rem;
-  color: #1f2937; /* gray-800 */
+}
+
+.restaurant-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827; /* gray-900 */
+}
+
+.priority-tag {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.priority-high {
+  background-color: #dc2626; /* red-600 */
+}
+
+.priority-medium {
+  background-color: #f59e0b; /* amber-500 */
+}
+
+.priority-low {
+  background-color: #10b981; /* emerald-500 */
 }
 
 .foodlist-items {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .foodlist-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e5e7eb; /* gray-200 */
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.foodlist-item:last-child {
+  border-bottom: none;
 }
 
 .foodlist-text {
   font-size: 1rem;
-  color: #374151; /* gray-700 */
+  color: #374151;
+  flex: 1;
 }
 
 .foodlist-request-btn {
-  background-color: #3b82f6; /* blue-500 */
+  background-color: #3b82f6;
   color: white;
-  padding: 0.4rem 0.75rem;
+  padding: 0.5rem 1rem;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 .foodlist-request-btn:hover {
-  background-color: #2563eb; /* blue-600 */
+  background-color: #2563eb;
+  transform: scale(1.05);
+}
+
+.foodlist-empty {
+  text-align: center;
+  color: #6b7280; /* gray-500 */
+  font-size: 1.1rem;
+  padding: 2rem 0;
 }
